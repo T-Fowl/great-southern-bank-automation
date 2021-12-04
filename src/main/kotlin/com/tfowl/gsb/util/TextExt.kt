@@ -4,3 +4,5 @@ fun String.shorterThan(length: Int): Boolean {
 // TODO: Allowed characters / codepoints
     return this.length <= length
 }
+
+fun String.takeIfIsNotBlank(): String? = takeIf { isNotBlank() }
