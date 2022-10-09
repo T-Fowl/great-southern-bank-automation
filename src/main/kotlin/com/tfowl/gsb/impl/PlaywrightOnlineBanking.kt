@@ -12,9 +12,13 @@ import com.tfowl.gsb.serialisation.MoneySerializer
 import com.tfowl.gsb.util.takeIfIsNotBlank
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.csv.Csv
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
+import org.jetbrains.kotlinx.dataframe.DataFrame
+import org.jetbrains.kotlinx.dataframe.api.cast
+import org.jetbrains.kotlinx.dataframe.api.update
+import org.jetbrains.kotlinx.dataframe.api.with
+import org.jetbrains.kotlinx.dataframe.io.readCSV
 import org.jsoup.Jsoup
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -81,7 +85,7 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
     override fun transactions(
         account: AccountNumber,
         timeRange: TimeRange,
-    ): Result<List<Transaction>, GSBError> = catch {
+    ): Result<DataFrame<Transaction>, GSBError> = catch {
         val frame = page.loadSection("Transactions")
 
         frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Account Please Select")).click()
@@ -97,9 +101,9 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
             frame.getByRole(AriaRole.MENUITEM, Frame.GetByRoleOptions().setName("CSV")).click()
         }
 
-        csv.decodeFromString<List<Transaction>>(
-            download.createReadStream().reader().readText()
-        ).map { it.copy(description = it.description.trim()) }
+        DataFrame.readCSV(download.createReadStream())
+            .cast<Transaction>()
+            .update { Description }.with { it.trim() }
     }
 
     override fun transfer(
