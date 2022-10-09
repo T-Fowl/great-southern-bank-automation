@@ -4,6 +4,7 @@ package com.tfowl.gsb.impl
 
 import com.github.michaelbull.result.*
 import com.microsoft.playwright.*
+import com.microsoft.playwright.options.AriaRole
 import com.tfowl.gsb.*
 import com.tfowl.gsb.model.*
 import com.tfowl.gsb.serialisation.LocalDateSerializer
@@ -17,6 +18,7 @@ import kotlinx.serialization.modules.contextual
 import org.jsoup.Jsoup
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+
 
 private const val ONLINE_BANKING_URL = "https://ob.greatsouthernbank.com.au"
 
@@ -45,8 +47,15 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
             frame("head4")
         }
 
+    private fun Page.loadSection(name: String): Frame {
+        page.getByRole(AriaRole.LINK, Page.GetByRoleOptions().setName(name)).click()
+
+        return frame("head4")
+    }
+
     override fun accounts(): Result<List<Account>, GSBError> = binding {
-        val frame = page.loadSectionFrame(sectionName = "Account Overview", waitForSelector = "#accountDash").bind()
+        val frame = page.loadSection("Account Overview")
+        frame.waitForSelector("#accountDash")
         val document = Jsoup.parse(frame.content())
 
         val table = document.selectFirstAsResult("#accountDash").bind()
@@ -59,7 +68,7 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
             val balance = tr.selectFirstAsResult("td:nth-child(4)").bind().text()
             val available = tr.selectFirstAsResult("td:nth-child(5)").bind().text()
 
-            Account(number.trim(), name.trim(), balance.trim(), available.trim())
+            Account(AccountNumber(number.trim()), name.trim(), balance.trim(), available.trim())
         }
 
         accounts
@@ -70,17 +79,23 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
     }
 
     override fun transactions(
-        account: Account,
-        timeRange: TimeRange
+        account: AccountNumber,
+        timeRange: TimeRange,
     ): Result<List<Transaction>, GSBError> = catch {
-        page.click("text=Transactions")
-        page.frame("head4").click("""a[role="button"]:has-text("Please Select")""")
-        page.frame("head4").click("""li[role="option"]:has-text("${account.name} ${account.number}")""")
-        page.frame("head4").click("""a[role="button"]:has-text("Please Select")""")
-        page.frame("head4").click("""li[role="option"]:has-text("The last 6 months")""")
-        page.frame("head4").click("""input[role="button"]:has-text("Search")""")
-        page.frame("head4").click("text=Export Bar-delimitedPDFQIFCSV >> span")
-        val download = page.waitForDownload { page.frame("head4").click("text=CSV") }
+        val frame = page.loadSection("Transactions")
+
+        frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Account Please Select")).click()
+
+        frame.locator("""li[role=option]:text("${account.number}")""").click()
+
+        frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Date Range Please Select")).click()
+        frame.getByRole(AriaRole.OPTION, Frame.GetByRoleOptions().setName("The last 6 months")).click()
+        frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Search")).click()
+        frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Export")).click()
+
+        val download = page.waitForDownload {
+            frame.getByRole(AriaRole.MENUITEM, Frame.GetByRoleOptions().setName("CSV")).click()
+        }
 
         csv.decodeFromString<List<Transaction>>(
             download.createReadStream().reader().readText()
@@ -92,11 +107,13 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
         to: Account,
         amount: Money,
         description: TransferDescription?,
-        schedule: PaymentSchedule
+        schedule: PaymentSchedule,
     ): Result<TransferReceipt, GSBError> = TODO()
 
     override fun payees(location: PayeeLocation): Result<List<Payee>, GSBError> = binding {
-        val frame = page.loadSectionFrame(sectionName = "Payee List", waitForSelector = "#addPayeeButton").bind()
+        val frame = page.loadSection("Payee List")
+
+        frame.waitForSelector("#addPayeeButton")
         val document = Jsoup.parse(frame.content())
 
         val table = document.selectFirstAsResult("table").bind()
@@ -127,7 +144,7 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
         amount: Money,
         description: FastPaymentDescription?,
         reference: FastPaymentReference?,
-        schedule: PaymentSchedule
+        schedule: PaymentSchedule,
     ): Result<PaymentReceipt, GSBError> = TODO()
 
     override fun payAnyone(
@@ -135,14 +152,14 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
         to: Payee,
         amount: Money,
         description: PaymentDescription?,
-        schedule: PaymentSchedule
+        schedule: PaymentSchedule,
     ): Result<PaymentReceipt, GSBError> = TODO()
 
     override fun scheduledPayments(
         account: Account,
         time: ClosedRange<LocalDate>?,
         amount: ClosedRange<Money>?,
-        type: ScheduledPaymentType
+        type: ScheduledPaymentType,
     ): Result<List<ScheduledPayment>, GSBError> = TODO()
 }
 
@@ -163,9 +180,12 @@ class GSBPlaywrightOnlineBanking(browserConfig: BrowserType.LaunchOptions.() -> 
         val navigation = catch {
             page.navigate(ONLINE_BANKING_URL)
 
-            page.fill("""[placeholder="Member Number"]""", credentials.memberNumber)
-            page.fill("""input[name="password"]""", credentials.password)
-            page.waitForNavigation { page.press("""input[name="password"]""", "Enter") }
+            page.getByPlaceholder("Customer Number").fill(credentials.memberNumber)
+            page.getByPlaceholder("Password").fill(credentials.password)
+
+            page.waitForNavigation {
+                page.click("#login")
+            }
         }
 
         /* TODO: Checking for failed login

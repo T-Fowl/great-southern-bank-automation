@@ -16,7 +16,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-RC")
 
-    implementation("com.microsoft.playwright:playwright:1.17.1")
+    implementation("com.microsoft.playwright:playwright:1.27.0")
 
     implementation("org.jsoup:jsoup:1.14.3")
 
