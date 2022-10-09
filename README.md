@@ -4,7 +4,7 @@ Great Southern Bank Automation in Kotlin
 
 Disclaimer
 ---
-Very much a work-in-progress that will receive attention only as required by my own personal automation-flow.
+Very much a work-in-progress that will receive attention only as required by my own personal use-cases.
 
 Please note that it is possible this goes against the terms and conditions of great southern bank. This repository is
 hosted on github primarily as an educational resource.
@@ -14,10 +14,10 @@ hosted on github primarily as an educational resource.
 Description
 ---
 
-[Great Southern Bank](https://www.greatsouthernbank.com.au/) (Formerly CUA) unfortunately does not provide an api for
+[Great Southern Bank](https://www.greatsouthernbank.com.au/) (Formerly CUA) unfortunately does not provide an API for
 accessing and managing your bank account automatically.
 
-This is a simple api using [Playwright](https://playwright.dev/) to control GSB's online banking website for such
+This is a simple API using [Playwright](https://playwright.dev/) to control GSB's online banking website for such
 reasons.
 ---
 
@@ -48,7 +48,7 @@ private fun main(bank: GreatSouthernBank) {
 }
 ```
 
-Output using [picnic](https://github.com/JakeWharton/picnic) for table generation:
+Output (Using [picnic](https://github.com/JakeWharton/picnic) for table generation):
 
 ```text
 ┌───────────────────────────────────────────────────────┐
