@@ -2,6 +2,7 @@ package com.tfowl.gsb
 
 import com.github.michaelbull.result.Result
 import com.tfowl.gsb.model.*
+import org.jetbrains.kotlinx.dataframe.DataFrame
 import java.time.LocalDate
 
 data class BankCredentials(
@@ -35,7 +36,7 @@ interface GSBMember {
     fun transactions(
         account: AccountNumber,
         timeRange: TimeRange = TimeRange.Last6Months,
-    ): Result<List<Transaction>, GSBError>
+    ): Result<DataFrame<Transaction>, GSBError>
 
     fun transfer(
         from: Account,

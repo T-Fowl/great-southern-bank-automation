@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalSerializationApi::class)
-
 package com.tfowl.gsb.impl
 
 import com.github.michaelbull.result.*
@@ -7,17 +5,14 @@ import com.microsoft.playwright.*
 import com.microsoft.playwright.options.AriaRole
 import com.tfowl.gsb.*
 import com.tfowl.gsb.model.*
-import com.tfowl.gsb.serialisation.LocalDateSerializer
-import com.tfowl.gsb.serialisation.MoneySerializer
 import com.tfowl.gsb.util.takeIfIsNotBlank
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.csv.Csv
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
+import org.jetbrains.kotlinx.dataframe.DataFrame
+import org.jetbrains.kotlinx.dataframe.api.cast
+import org.jetbrains.kotlinx.dataframe.api.update
+import org.jetbrains.kotlinx.dataframe.api.with
+import org.jetbrains.kotlinx.dataframe.io.readCSV
 import org.jsoup.Jsoup
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 
 private const val ONLINE_BANKING_URL = "https://ob.greatsouthernbank.com.au"
@@ -29,14 +24,6 @@ inline private fun <T, R> T.catch(block: T.() -> R): Result<R, GSBError> =
     this.runCatching(block).mapError { GSBError.Exception(it) }
 
 internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
-    private val csv = Csv {
-        hasHeaderRecord = true
-        serializersModule = SerializersModule {
-            contextual(MoneySerializer)
-            contextual(LocalDateSerializer(DateTimeFormatter.ofPattern("d LLL yyyy")))
-        }
-    }
-
     private fun Page.hasSessionEnded(): Boolean = url().endsWith("FirstLogin.action")
 
     private fun Page.loadSectionFrame(sectionName: String, waitForSelector: String): Result<Frame, GSBError> =
@@ -81,7 +68,7 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
     override fun transactions(
         account: AccountNumber,
         timeRange: TimeRange,
-    ): Result<List<Transaction>, GSBError> = catch {
+    ): Result<DataFrame<Transaction>, GSBError> = catch {
         val frame = page.loadSection("Transactions")
 
         frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Account Please Select")).click()
@@ -97,9 +84,9 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
             frame.getByRole(AriaRole.MENUITEM, Frame.GetByRoleOptions().setName("CSV")).click()
         }
 
-        csv.decodeFromString<List<Transaction>>(
-            download.createReadStream().reader().readText()
-        ).map { it.copy(description = it.description.trim()) }
+        DataFrame.readCSV(download.createReadStream())
+            .cast<Transaction>()
+            .update { Description }.with { it.trim() }
     }
 
     override fun transfer(
