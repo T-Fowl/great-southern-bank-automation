@@ -11,14 +11,8 @@ import kotlinx.serialization.encoding.Encoder
 object MoneySerializer : KSerializer<Money> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Money", PrimitiveKind.STRING)
 
-    override fun deserialize(decoder: Decoder): Money {
-        val text = decoder.decodeString().removePrefix("$").trim()
-            .replace(Regex(""",\s*"""), "")
-        return Money(text.toBigDecimal())
-    }
+    override fun deserialize(decoder: Decoder): Money = Money.parseOrNull(decoder.decodeString())!!
 
 
-    override fun serialize(encoder: Encoder, value: Money) {
-        encoder.encodeString("$" + value.value.toString())
-    }
+    override fun serialize(encoder: Encoder, value: Money) = encoder.encodeString("$value")
 }
