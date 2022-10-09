@@ -1,4 +1,4 @@
-package com.tfowl.gsb
+package com.tfowl.gsb.model
 
 import com.tfowl.gsb.util.shorterThan
 
