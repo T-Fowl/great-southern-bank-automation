@@ -26,6 +26,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:dataframe:0.9.0-dev-1139")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
 
+    implementation("com.github.ajalt.clikt:clikt:3.5.0")
+
     testImplementation(kotlin("test"))
 }
 
