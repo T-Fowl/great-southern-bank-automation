@@ -28,6 +28,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
     implementation("de.brudaswen.kotlinx.serialization:kotlinx-serialization-csv:2.0.0")
 
+    implementation("org.jetbrains.kotlinx:dataframe:0.9.0-dev-1139")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+
     testImplementation(kotlin("test"))
 }
 
