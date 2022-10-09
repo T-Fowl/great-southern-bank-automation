@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.6.0"
-    kotlin("plugin.serialization") version "1.6.0"
 }
 
 group = "com.tfowl.gsb"
