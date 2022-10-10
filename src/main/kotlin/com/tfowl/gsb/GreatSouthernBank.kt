@@ -39,8 +39,8 @@ interface GSBMember {
     ): Result<DataFrame<Transaction>, GSBError>
 
     fun transfer(
-        from: Account,
-        to: Account,
+        from: AccountNumber,
+        to: AccountNumber,
         amount: Money,
         description: TransferDescription? = null,
         schedule: PaymentSchedule = PaymentSchedule.Now,
@@ -49,7 +49,8 @@ interface GSBMember {
     fun payees(location: PayeeLocation = PayeeLocation.InAustralia): Result<List<Payee>, GSBError>
 
     fun fastPayment(
-        from: Account, to: Payee,
+        from: AccountNumber,
+        to: Payee,
         amount: Money,
         description: FastPaymentDescription? = null,
         reference: FastPaymentReference? = null,
@@ -57,21 +58,17 @@ interface GSBMember {
     ): Result<PaymentReceipt, GSBError>
 
     fun payAnyone(
-        from: Account, to: Payee,
+        from: AccountNumber,
+        to: Payee,
         amount: Money,
         description: PaymentDescription? = null,
         schedule: PaymentSchedule = PaymentSchedule.Now,
     ): Result<PaymentReceipt, GSBError>
 
     fun scheduledPayments(
-        account: Account,
+        account: AccountNumber,
         time: ClosedRange<LocalDate>? = null,
         amount: ClosedRange<Money>? = null,
         type: ScheduledPaymentType = ScheduledPaymentType.PaymentAndBills,
     ): Result<List<ScheduledPayment>, GSBError>
 }
-
-fun GSBMember.transactions(
-    account: Account,
-    timeRange: TimeRange = TimeRange.Last6Months,
-) = transactions(account.number, timeRange)

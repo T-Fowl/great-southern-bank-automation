@@ -100,11 +100,11 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
     }
 
     override fun transfer(
-        from: Account,
-        to: Account,
+        from: AccountNumber,
+        to: AccountNumber,
         amount: Money,
         description: TransferDescription?,
-        schedule: PaymentSchedule,
+        schedule: PaymentSchedule
     ): Result<TransferReceipt, GSBError> = TODO()
 
     override fun payees(location: PayeeLocation): Result<List<Payee>, GSBError> = binding {
@@ -136,27 +136,27 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
     }
 
     override fun fastPayment(
-        from: Account,
+        from: AccountNumber,
         to: Payee,
         amount: Money,
         description: FastPaymentDescription?,
         reference: FastPaymentReference?,
-        schedule: PaymentSchedule,
+        schedule: PaymentSchedule
     ): Result<PaymentReceipt, GSBError> = TODO()
 
     override fun payAnyone(
-        from: Account,
+        from: AccountNumber,
         to: Payee,
         amount: Money,
         description: PaymentDescription?,
-        schedule: PaymentSchedule,
+        schedule: PaymentSchedule
     ): Result<PaymentReceipt, GSBError> = TODO()
 
     override fun scheduledPayments(
-        account: Account,
+        account: AccountNumber,
         time: ClosedRange<LocalDate>?,
         amount: ClosedRange<Money>?,
-        type: ScheduledPaymentType,
+        type: ScheduledPaymentType
     ): Result<List<ScheduledPayment>, GSBError> = TODO()
 }
 
