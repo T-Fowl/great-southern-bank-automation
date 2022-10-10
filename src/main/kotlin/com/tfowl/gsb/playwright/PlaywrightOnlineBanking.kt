@@ -3,7 +3,10 @@ package com.tfowl.gsb.impl
 import com.github.michaelbull.result.*
 import com.microsoft.playwright.*
 import com.microsoft.playwright.options.AriaRole
-import com.tfowl.gsb.*
+import com.tfowl.gsb.BankCredentials
+import com.tfowl.gsb.GSBError
+import com.tfowl.gsb.GSBMember
+import com.tfowl.gsb.GreatSouthernBank
 import com.tfowl.gsb.model.*
 import com.tfowl.gsb.util.takeIfIsNotBlank
 import org.jetbrains.kotlinx.dataframe.DataFrame
@@ -35,7 +38,9 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
         }
 
     private fun Page.loadSection(name: String): Frame {
-        page.getByRole(AriaRole.LINK, Page.GetByRoleOptions().setName(name)).click()
+        page.waitForNavigation {
+            page.getByRole(AriaRole.LINK, Page.GetByRoleOptions().setName(name)).click()
+        }
 
         return frame("head4")
     }
@@ -50,12 +55,17 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
         val rows = table.select("tbody tr")
 
         val accounts = rows.map { tr ->
-            val number = tr.selectFirstAsResult("td:nth-child(1)").bind().text()
-            val name = tr.selectFirstAsResult("td:nth-child(3)").bind().text()
-            val balance = tr.selectFirstAsResult("td:nth-child(4)").bind().text()
-            val available = tr.selectFirstAsResult("td:nth-child(5)").bind().text()
+            val number = tr.selectFirstAsResult("td:nth-child(1)").bind().text().trim()
+            val name = tr.selectFirstAsResult("td:nth-child(3)").bind().text().trim()
+            val balance = tr.selectFirstAsResult("td:nth-child(4)").bind().text().trim()
+            val available = tr.selectFirstAsResult("td:nth-child(5)").bind().text().trim()
 
-            Account(AccountNumber(number.trim()), name.trim(), balance.trim(), available.trim())
+            Account(
+                AccountNumber(number),
+                name,
+                Money.parseOrNull(balance)!!, // TODO
+                Money.parseOrNull(available)!! // TODO
+            )
         }
 
         accounts
