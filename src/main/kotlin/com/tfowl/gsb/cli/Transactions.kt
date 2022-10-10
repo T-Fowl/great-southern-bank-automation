@@ -19,7 +19,7 @@ import org.jetbrains.kotlinx.dataframe.io.html
 import org.jetbrains.kotlinx.dataframe.io.writeCSV
 import org.jetbrains.kotlinx.dataframe.io.writeJson
 
-enum class TransactionOutputFormat {
+enum class TransactionsOutputFormat {
     Csv,
     Json,
     Html,
@@ -46,17 +46,17 @@ class Transactions : GsbSubcommand() {
     private val account by option().required()
 
     private val output by option().outputStream().defaultStdout()
-    private val format by option().enum<TransactionOutputFormat>().default(TransactionOutputFormat.Csv)
+    private val format by option().enum<TransactionsOutputFormat>().default(TransactionsOutputFormat.Csv)
 
     override fun run(member: GSBMember) {
         val transactions = member.transactions(AccountNumber(account)).unwrap()
 
         output.bufferedWriter().use { writer ->
             when (format) {
-                TransactionOutputFormat.Csv   -> transactions.writeCSV(writer)
-                TransactionOutputFormat.Json  -> transactions.writeJson(writer)
-                TransactionOutputFormat.Html  -> writer.append(transactions.html())
-                TransactionOutputFormat.Table -> writer.append(transactions.toTable().renderText())
+                TransactionsOutputFormat.Csv   -> transactions.writeCSV(writer)
+                TransactionsOutputFormat.Json  -> transactions.writeJson(writer)
+                TransactionsOutputFormat.Html  -> writer.append(transactions.html())
+                TransactionsOutputFormat.Table -> writer.append(transactions.toTable().renderText())
             }
         }
     }
