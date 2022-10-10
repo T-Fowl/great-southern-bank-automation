@@ -1,1 +1,1 @@
-rootProject.name = "gsb-automation-kotlin"
+rootProject.name = "gsb"
