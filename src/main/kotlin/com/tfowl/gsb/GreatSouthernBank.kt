@@ -21,6 +21,8 @@ sealed class GSBError {
     /** Session ended - need to login again */
     object SessionEnded : GSBError()
 
+    data class UnsupportedOperation(val reason: String) : GSBError()
+
     /** When parsing elements from the html */
     data class ScrapingError(val message: String) : GSBError()
 

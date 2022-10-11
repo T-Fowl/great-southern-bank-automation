@@ -69,9 +69,8 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
         df.map { it.toAccount() }
     }
 
-    override fun statements(): Result<List<Statement>, GSBError> {
-        TODO("not implemented")
-    }
+    override fun statements(): Result<List<Statement>, GSBError> =
+        Err(GSBError.UnsupportedOperation("Not Implemented Yet")) // TODO
 
     // TODO: Include pending
     override fun transactions(
@@ -103,8 +102,8 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
         to: AccountNumber,
         amount: Money,
         description: TransferDescription?,
-        schedule: PaymentSchedule
-    ): Result<TransferReceipt, GSBError> = TODO()
+        schedule: PaymentSchedule,
+    ): Result<TransferReceipt, GSBError> = Err(GSBError.UnsupportedOperation("Not Implemented Yet")) // TODO
 
     // TODO: Change to extracting a DataFrame
     override fun payees(location: PayeeLocation): Result<List<Payee>, GSBError> = binding {
@@ -141,23 +140,23 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
         amount: Money,
         description: FastPaymentDescription?,
         reference: FastPaymentReference?,
-        schedule: PaymentSchedule
-    ): Result<PaymentReceipt, GSBError> = TODO()
+        schedule: PaymentSchedule,
+    ): Result<PaymentReceipt, GSBError> = Err(GSBError.UnsupportedOperation("Not Implemented Yet")) // TODO
 
     override fun payAnyone(
         from: AccountNumber,
         to: Payee,
         amount: Money,
         description: PaymentDescription?,
-        schedule: PaymentSchedule
-    ): Result<PaymentReceipt, GSBError> = TODO()
+        schedule: PaymentSchedule,
+    ): Result<PaymentReceipt, GSBError> = Err(GSBError.UnsupportedOperation("Not Implemented Yet")) // TODO
 
     override fun scheduledPayments(
         account: AccountNumber,
         time: ClosedRange<LocalDate>?,
         amount: ClosedRange<Money>?,
-        type: ScheduledPaymentType
-    ): Result<List<ScheduledPayment>, GSBError> = TODO()
+        type: ScheduledPaymentType,
+    ): Result<List<ScheduledPayment>, GSBError> = Err(GSBError.UnsupportedOperation("Not Implemented Yet")) // TODO
 }
 
 class GSBPlaywrightOnlineBanking(browserConfig: BrowserType.LaunchOptions.() -> Unit = {}) :
