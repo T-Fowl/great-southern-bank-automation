@@ -106,6 +106,7 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
         schedule: PaymentSchedule
     ): Result<TransferReceipt, GSBError> = TODO()
 
+    // TODO: Change to extracting a DataFrame
     override fun payees(location: PayeeLocation): Result<List<Payee>, GSBError> = binding {
         val frame = page.loadSection("Payee List")
 
