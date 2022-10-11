@@ -10,9 +10,7 @@ import com.tfowl.gsb.GreatSouthernBank
 import com.tfowl.gsb.model.*
 import com.tfowl.gsb.util.takeIfIsNotBlank
 import org.jetbrains.kotlinx.dataframe.DataFrame
-import org.jetbrains.kotlinx.dataframe.api.cast
-import org.jetbrains.kotlinx.dataframe.api.update
-import org.jetbrains.kotlinx.dataframe.api.with
+import org.jetbrains.kotlinx.dataframe.api.*
 import org.jetbrains.kotlinx.dataframe.io.readCSV
 import org.jsoup.Jsoup
 import java.time.LocalDate
@@ -52,33 +50,34 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
 
         val table = document.selectFirstAsResult("#accountDash").bind()
 
-        val rows = table.select("tbody tr")
+        val columnNamesMapping = mapOf(
+            "account" to "AccountNumber",
+            "account name" to "AccountName",
+            "balance" to "Balance",
+            "available" to "Available"
+        )
 
-        val accounts = rows.map { tr ->
-            val number = tr.selectFirstAsResult("td:nth-child(1)").bind().text().trim()
-            val name = tr.selectFirstAsResult("td:nth-child(3)").bind().text().trim()
-            val balance = tr.selectFirstAsResult("td:nth-child(4)").bind().text().trim()
-            val available = tr.selectFirstAsResult("td:nth-child(5)").bind().text().trim()
+        val df = table.parseTableAsDataFrame().bind()
+            .select(columnNamesMapping.keys)
+            .rename { all() }.into { columnNamesMapping[it.name]!! }
+            .convert("AccountNumber").with { AccountNumber(it.toString()) }
+            .convert("AccountName").with { it.toString() }
+            .convert("Available").with { Money.parseOrNull(it.toString()) }
+            .convert("Balance").with { Money.parseOrNull(it.toString()) }
+            .cast<AccountSchema>()
 
-            Account(
-                AccountNumber(number),
-                name,
-                Money.parseOrNull(balance)!!, // TODO
-                Money.parseOrNull(available)!! // TODO
-            )
-        }
-
-        accounts
+        df.map { it.toAccount() }
     }
 
     override fun statements(): Result<List<Statement>, GSBError> {
         TODO("not implemented")
     }
 
+    // TODO: Include pending
     override fun transactions(
         account: AccountNumber,
         timeRange: TimeRange,
-    ): Result<DataFrame<Transaction>, GSBError> = catch {
+    ): Result<DataFrame<TransactionSchema>, GSBError> = catch {
         val frame = page.loadSection("Transactions")
 
         frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Account Please Select")).click()
@@ -95,7 +94,7 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
         }
 
         DataFrame.readCSV(download.createReadStream())
-            .cast<Transaction>()
+            .cast<TransactionSchema>()
             .update { Description }.with { it.trim() }
     }
 

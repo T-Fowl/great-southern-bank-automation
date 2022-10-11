@@ -12,7 +12,7 @@ import com.jakewharton.picnic.renderText
 import com.jakewharton.picnic.table
 import com.tfowl.gsb.GSBMember
 import com.tfowl.gsb.model.AccountNumber
-import com.tfowl.gsb.model.Transaction
+import com.tfowl.gsb.model.TransactionSchema
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.forEach
 import org.jetbrains.kotlinx.dataframe.io.html
@@ -26,7 +26,7 @@ enum class TransactionsOutputFormat {
     Table
 }
 
-private fun DataFrame<Transaction>.toTable(): Table = table {
+private fun DataFrame<TransactionSchema>.toTable(): Table = table {
     header {
         row {
             columnNames().forEach { cell(it) }
