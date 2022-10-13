@@ -38,11 +38,17 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
         }
 
     private fun Page.loadSection(name: String): Frame {
-        page.waitForNavigation {
+        val f = frame("head4")
+
+        f.waitForNavigation {
             page.getByRole(AriaRole.LINK, Page.GetByRoleOptions().setName(name)).click()
         }
 
-        return frame("head4")
+//        page.waitForNavigation(Page.WaitForNavigationOptions().setWaitUntil(WaitUntilState.NETWORKIDLE)) {
+//            page.getByRole(AriaRole.LINK, Page.GetByRoleOptions().setName(name)).click()
+//        }
+
+        return f
     }
 
     override fun accounts(): Result<List<Account>, GSBError> = binding {
@@ -81,20 +87,27 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
     ): Result<DataFrame<TransactionSchema>, GSBError> = catch {
         val frame = page.loadSection("Transactions")
 
-        frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Account Please Select")).click()
+        val clickOptions = Locator.ClickOptions().setDelay(200.0)
 
-        frame.locator("""li[role=option]:text("${account.number}")""").click()
+        frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Account Please Select")).click(clickOptions)
 
-        frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Date Range Please Select")).click()
-        frame.getByRole(AriaRole.OPTION, Frame.GetByRoleOptions().setName("The last 6 months")).click()
-        frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Search")).click()
-        frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Export")).click()
+        frame.getByRole(AriaRole.OPTION, Frame.GetByRoleOptions().setName(Pattern.compile(account.number)))
+            .click(clickOptions)
+        frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Date Range Please Select"))
+            .click(clickOptions)
+        frame.getByRole(AriaRole.OPTION, Frame.GetByRoleOptions().setName("The last 6 months")).click(clickOptions)
+        frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Search")).click(clickOptions)
+        frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Export")).click(clickOptions)
 
         val download = page.waitForDownload {
-            frame.getByRole(AriaRole.MENUITEM, Frame.GetByRoleOptions().setName("CSV")).click()
+            frame.getByRole(AriaRole.MENUITEM, Frame.GetByRoleOptions().setName("CSV")).click(clickOptions)
         }
 
-        DataFrame.readCSV(download.createReadStream())
+        DataFrame.readCSV(download.createReadStream(), parserOptions = ParserOptions(dateTimePattern = "d LLL uuuu"))
+            .convert("Date").toLocalDate()
+            .convert("Debit").with { it?.toString()?.let { Money.parseOrNull(it) } }
+            .convert("Credit").with { it?.toString()?.let { Money.parseOrNull(it) } }
+            .convert("Balance").with { it?.toString()?.let { Money.parseOrNull(it) } }
             .cast<TransactionSchema>()
             .update { Description }.with { it.trim() }
     }
@@ -195,14 +208,7 @@ class GSBPlaywrightOnlineBanking(browserConfig: BrowserType.LaunchOptions.() -> 
 //            page.content().contains("The login details you have entered are incorrect")
         }
 
-        /* TODO: Checking for failed login
-        *   - Checking `navigation.url()` does not work as it points to the login page
-        *   - Checking `navigation.text()` resulted in a playwright exception being thrown
-        *     For now just ignore */
         return Ok(GSBOnlineBankingMember(page))
-//        return navigation.toErrorIf({ nv -> "The login details you have entered are incorrect." in nv.text() }) { GSBError.InvalidCredentials }
-////        return navigation.toErrorIf({ nv -> !nv.url().endsWith("home.action") }) { GSBError.InvalidCredentials }
-//            .map { GreatSouthernBankPlaywright(page) }
     }
 
     override fun close() {
