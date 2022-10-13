@@ -2,6 +2,7 @@ package com.tfowl.gsb.impl
 
 import com.github.michaelbull.result.*
 import com.microsoft.playwright.*
+import com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat
 import com.microsoft.playwright.options.AriaRole
 import com.tfowl.gsb.BankCredentials
 import com.tfowl.gsb.GSBError
@@ -14,6 +15,7 @@ import org.jetbrains.kotlinx.dataframe.api.*
 import org.jetbrains.kotlinx.dataframe.io.readCSV
 import org.jsoup.Jsoup
 import java.time.LocalDate
+import java.util.regex.Pattern
 
 
 private const val ONLINE_BANKING_URL = "https://ob.greatsouthernbank.com.au"
@@ -176,12 +178,21 @@ class GSBPlaywrightOnlineBanking(browserConfig: BrowserType.LaunchOptions.() -> 
         val navigation = catch {
             page.navigate(ONLINE_BANKING_URL)
 
-            page.getByPlaceholder("Customer Number").fill(credentials.memberNumber)
+//            page.getByPlaceholder("Customer Number").click()
+            page.getByPlaceholder("Customer Number").fill(credentials.customerNumber)
+
+//            page.getByPlaceholder("Password").click()
             page.getByPlaceholder("Password").fill(credentials.password)
 
             page.waitForNavigation {
-                page.click("#login")
+                page.getByRole(AriaRole.BUTTON, Page.GetByRoleOptions().setName("Login")).click()
             }
+
+            // TODO: This will throw an exception (caught) - however we should probably try and return the correct Err type
+            assertThat(page).hasURL(Pattern.compile("home.action$"))
+
+            // eg?
+//            page.content().contains("The login details you have entered are incorrect")
         }
 
         /* TODO: Checking for failed login
