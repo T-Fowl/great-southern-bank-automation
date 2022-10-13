@@ -6,7 +6,7 @@ import org.jetbrains.kotlinx.dataframe.DataFrame
 import java.time.LocalDate
 
 data class BankCredentials(
-    val memberNumber: String,
+    val customerNumber: String,
     val password: String,
 )
 
