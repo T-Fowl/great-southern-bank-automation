@@ -10,9 +10,7 @@ import com.tfowl.gsb.GSBMember
 import com.tfowl.gsb.GreatSouthernBank
 import com.tfowl.gsb.model.*
 import com.tfowl.gsb.util.takeIfIsNotBlank
-import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.*
-import org.jetbrains.kotlinx.dataframe.io.readCSV
 import org.jsoup.Jsoup
 import java.time.LocalDate
 import java.util.regex.Pattern
@@ -38,6 +36,8 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
         }
 
     private fun Page.loadSection(name: String): Frame {
+        waitForSelector("iframe#head4")
+
         val f = frame("head4")
 
         f.waitForNavigation {
