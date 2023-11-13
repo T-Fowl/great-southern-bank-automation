@@ -80,11 +80,13 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
     override fun statements(): Result<List<Statement>, GSBError> =
         Err(GSBError.UnsupportedOperation("Not Implemented Yet")) // TODO
 
+
     // TODO: Include pending
+    // TODO: Flow?
     override fun transactions(
         account: AccountNumber,
         timeRange: TimeRange,
-    ): Result<DataFrame<TransactionSchema>, GSBError> = catch {
+    ): Result<List<Transaction>, GSBError> = catch {
         val frame = page.loadSection("Transactions")
 
         val clickOptions = Locator.ClickOptions().setDelay(200.0)
@@ -97,19 +99,22 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
             .click(clickOptions)
         frame.getByRole(AriaRole.OPTION, Frame.GetByRoleOptions().setName("The last 6 months")).click(clickOptions)
         frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Search")).click(clickOptions)
-        frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Export")).click(clickOptions)
 
-        val download = page.waitForDownload {
-            frame.getByRole(AriaRole.MENUITEM, Frame.GetByRoleOptions().setName("CSV")).click(clickOptions)
-        }
 
-        DataFrame.readCSV(download.createReadStream(), parserOptions = ParserOptions(dateTimePattern = "d LLL uuuu"))
-            .convert("Date").toLocalDate()
-            .convert("Debit").with { it?.toString()?.let { Money.parseOrNull(it) } }
-            .convert("Credit").with { it?.toString()?.let { Money.parseOrNull(it) } }
-            .convert("Balance").with { it?.toString()?.let { Money.parseOrNull(it) } }
-            .cast<TransactionSchema>()
-            .update { Description }.with { it.trim() }
+        return TODO()
+//        frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Export")).click(clickOptions)
+//
+//        val download = page.waitForDownload {
+//            frame.getByRole(AriaRole.MENUITEM, Frame.GetByRoleOptions().setName("CSV")).click(clickOptions)
+//        }
+//
+//        DataFrame.readCSV(download.createReadStream(), parserOptions = ParserOptions(dateTimePattern = "d LLL uuuu"))
+//            .convert("Date").toLocalDate()
+//            .convert("Debit").with { it?.toString()?.let { Money.parseOrNull(it) } }
+//            .convert("Credit").with { it?.toString()?.let { Money.parseOrNull(it) } }
+//            .convert("Balance").with { it?.toString()?.let { Money.parseOrNull(it) } }
+//            .cast<TransactionSchema>()
+//            .update { Description }.with { it.trim() }
     }
 
     override fun transfer(

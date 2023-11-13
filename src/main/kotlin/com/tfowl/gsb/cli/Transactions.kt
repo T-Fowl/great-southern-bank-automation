@@ -7,39 +7,37 @@ import com.github.ajalt.clikt.parameters.types.defaultStdout
 import com.github.ajalt.clikt.parameters.types.enum
 import com.github.ajalt.clikt.parameters.types.outputStream
 import com.github.michaelbull.result.unwrap
-import com.jakewharton.picnic.Table
-import com.jakewharton.picnic.renderText
-import com.jakewharton.picnic.table
 import com.tfowl.gsb.GSBMember
 import com.tfowl.gsb.model.AccountNumber
-import com.tfowl.gsb.model.TransactionSchema
-import org.jetbrains.kotlinx.dataframe.DataFrame
-import org.jetbrains.kotlinx.dataframe.api.forEach
-import org.jetbrains.kotlinx.dataframe.io.html
-import org.jetbrains.kotlinx.dataframe.io.writeCSV
-import org.jetbrains.kotlinx.dataframe.io.writeJson
+import com.tfowl.gsb.model.Transaction
 
 enum class TransactionsOutputFormat {
     Csv,
     Json,
-    Html,
-    Table
+//    Html,
+//    Table
 }
 
-private fun DataFrame<TransactionSchema>.toTable(): Table = table {
-    header {
-        row {
-            columnNames().forEach { cell(it) }
-        }
-    }
-    body {
-        forEach { dr ->
-            row {
-                dr.values().forEach { cell(it) }
-            }
-        }
-    }
-}
+private fun Transaction.toJson(): String =
+    """{"date": "$date", description: "$description", balance: "$balance", debit: "$debit", credit: "$credit"}"""
+
+private fun Transaction.toCsv(): String =
+    """$date, "$description", $balance, $debit, $credit"""
+
+//private fun DataFrame<TransactionSchema>.toTable(): Table = table {
+//    header {
+//        row {
+//            columnNames().forEach { cell(it) }
+//        }
+//    }
+//    body {
+//        forEach { dr ->
+//            row {
+//                dr.values().forEach { cell(it) }
+//            }
+//        }
+//    }
+//}
 
 class Transactions : GsbSubcommand() {
 
@@ -53,10 +51,8 @@ class Transactions : GsbSubcommand() {
 
         output.bufferedWriter().use { writer ->
             when (format) {
-                TransactionsOutputFormat.Csv   -> transactions.writeCSV(writer)
-                TransactionsOutputFormat.Json  -> transactions.writeJson(writer)
-                TransactionsOutputFormat.Html  -> writer.append(transactions.html())
-                TransactionsOutputFormat.Table -> writer.append(transactions.toTable().renderText())
+                TransactionsOutputFormat.Csv  -> transactions.forEach { t -> writer.appendLine(t.toCsv()) }
+                TransactionsOutputFormat.Json -> transactions.forEach { t -> writer.appendLine(t.toJson()) }
             }
         }
     }

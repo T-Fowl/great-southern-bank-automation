@@ -38,7 +38,7 @@ interface GSBMember {
     fun transactions(
         account: AccountNumber,
         timeRange: TimeRange = TimeRange.Last6Months,
-    ): Result<DataFrame<TransactionSchema>, GSBError>
+    ): Result<List<Transaction>, GSBError>
 
     fun transfer(
         from: AccountNumber,
