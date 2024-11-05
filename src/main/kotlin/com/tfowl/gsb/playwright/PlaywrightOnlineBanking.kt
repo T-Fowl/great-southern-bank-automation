@@ -4,6 +4,7 @@ import com.github.michaelbull.result.*
 import com.microsoft.playwright.*
 import com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat
 import com.microsoft.playwright.options.AriaRole
+import com.microsoft.playwright.options.LoadState
 import com.tfowl.gsb.BankCredentials
 import com.tfowl.gsb.GSBError
 import com.tfowl.gsb.GSBMember
@@ -14,6 +15,8 @@ import org.jetbrains.kotlinx.dataframe.api.*
 import org.jsoup.Jsoup
 import java.time.LocalDate
 import java.util.regex.Pattern
+import kotlin.io.path.Path
+import kotlin.io.path.readText
 
 
 private const val ONLINE_BANKING_URL = "https://ob.greatsouthernbank.com.au"
@@ -40,9 +43,10 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
 
         val f = frame("head4")
 
-        f.waitForNavigation {
-            page.getByRole(AriaRole.LINK, Page.GetByRoleOptions().setName(name)).click()
-        }
+        page.getByRole(AriaRole.LINK, Page.GetByRoleOptions().setName(name)).click()
+        f.waitForLoadState(LoadState.DOMCONTENTLOADED)
+//        f.waitForNavigation {
+//        }
 
 //        page.waitForNavigation(Page.WaitForNavigationOptions().setWaitUntil(WaitUntilState.NETWORKIDLE)) {
 //            page.getByRole(AriaRole.LINK, Page.GetByRoleOptions().setName(name)).click()
@@ -80,6 +84,20 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
     override fun statements(): Result<List<Statement>, GSBError> =
         Err(GSBError.UnsupportedOperation("Not Implemented Yet")) // TODO
 
+    data class TransactionModel(
+        val transImage: String,
+        val transactionDate: String,
+        val transactionDescription: String,
+        val message: String,
+        val debitAmount: String,
+        val creditAmount: String,
+        val balanceAmount: String,
+        val jrnlNo: String,
+        val fromAccntNo: String,
+        val outwardFlag: String,
+        val moreDetArrow: String,
+        val uuid: String,
+    )
 
     // TODO: Include pending
     // TODO: Flow?
@@ -89,16 +107,41 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
     ): Result<List<Transaction>, GSBError> = catch {
         val frame = page.loadSection("Transactions")
 
-        val clickOptions = Locator.ClickOptions().setDelay(200.0)
+        val clickOptions = Locator.ClickOptions().setDelay(50.0)
 
         frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Account Please Select")).click(clickOptions)
 
         frame.getByRole(AriaRole.OPTION, Frame.GetByRoleOptions().setName(Pattern.compile(account.number)))
             .click(clickOptions)
+//        frame.getByLabel("Please Select").click(clickOptions)
         frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Date Range Please Select"))
             .click(clickOptions)
-        frame.getByRole(AriaRole.OPTION, Frame.GetByRoleOptions().setName("The last 6 months")).click(clickOptions)
+        // Dev - don't paginate for too long
+        frame.getByRole(AriaRole.OPTION, Frame.GetByRoleOptions().setName("The last 2 months")).click(clickOptions)
+//        frame.getByRole(AriaRole.OPTION, Frame.GetByRoleOptions().setName("The last 6 months")).click(clickOptions)
         frame.getByRole(AriaRole.BUTTON, Frame.GetByRoleOptions().setName("Search")).click(clickOptions)
+
+        // .paginationDisabled is always present?
+        // [data-page] isn't present on the last page
+        val nextPageLink = frame.locator("#paginationPayToText_n[data-page]")
+
+        while (true) {
+
+            // Make sure the content is loaded
+            frame.waitForSelector("table[name=accstmtlist]")
+//        frame.waitForLoadState(LoadState.DOMCONTENTLOADED)
+
+            val statement = frame.evaluate(Path("extract-statement.js").readText())
+            println(statement)
+
+            frame.waitForSelector("#bottomPagination")
+            val next = frame.querySelector("#paginationPayToText_n[data-page]") ?: break
+
+            frame.waitForNavigation {
+                next.click()
+            }
+        }
+
 
 
         return TODO()
