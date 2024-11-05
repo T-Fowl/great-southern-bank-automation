@@ -1,41 +1,60 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.7.20"
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
+    application
+    idea
 }
 
 group = "com.tfowl.gsb"
 version = "1.0-SNAPSHOT"
+
+application {
+    mainClass.set("com.tfowl.gsb.GreatSouthernBankKt")
+
+    findProperty("playwright.nodejs.path")?.let { path ->
+        applicationDefaultJvmArgs = listOf("-Dplaywright.nodejs.path=$path")
+    }
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation(libs.kotlinx.coroutines.core)
 
-    implementation("org.jsoup:jsoup:1.15.3")
-    implementation("com.microsoft.playwright:playwright:1.27.0")
+    implementation(libs.jsoup)
+    implementation(libs.playwright)
 
-    implementation("com.jakewharton.picnic:picnic:0.6.0")
+    implementation(libs.picnic)
 
-    implementation("com.michael-bull.kotlin-result:kotlin-result:1.1.16")
-    implementation("com.michael-bull.kotlin-result:kotlin-result-coroutines:1.1.16")
+    implementation(libs.bundles.kotlinresult)
 
-    implementation("org.jetbrains.kotlinx:dataframe:0.9.0-dev-1139")
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+    implementation(libs.kotlinx.dataframe)
+    implementation(libs.kotlinx.datetime)
 
-    implementation("com.github.ajalt.clikt:clikt:3.5.0")
+    implementation(libs.kotlinx.serialization.json)
 
-    testImplementation(kotlin("test"))
+    implementation(libs.clikt)
+
+    testImplementation(libs.bundles.testing)
 }
 
 tasks.test {
     useJUnitPlatform()
 }
 
+java {
+    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_21
+}
+
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "17"
-    kotlinOptions.freeCompilerArgs = listOf("-opt-in=kotlin.RequiresOptIn")
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
+        freeCompilerArgs = listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
+    }
 }

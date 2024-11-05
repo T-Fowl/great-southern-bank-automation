@@ -1,0 +1,36 @@
+[versions]
+kotlinx-serialization = "1.7.1"
+kotlinx-coroutines = "1.7.1"
+kotlinx-dataframe = "0.9.0-dev-1139"
+kotlinx-datetime = "0.4.0"
+kotlinresult = "2.0.0"
+playwright = "1.46.0"
+log4j = "2.23.1"
+clikt = "4.4.0"
+mockk = "1.13.12"
+junit = "5.10.3"
+jsoup = "1.15.3"
+picnic = "0.6.0"
+
+[libraries]
+playwright = { module = "com.microsoft.playwright:playwright", version.ref = "playwright" }
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+kotlinresult = { module = "com.michael-bull.kotlin-result:kotlin-result", version.ref = "kotlinresult" }
+kotlinresult-coroutines = { module = "com.michael-bull.kotlin-result:kotlin-result-coroutines", version.ref = "kotlinresult" }
+clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
+picnic = { module = "com.jakewharton.picnic:picnic", version.ref = "picnic" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+log4j-slf4j2impl = { module = "org.apache.logging.log4j:log4j-slf4j2-impl", version.ref = "log4j" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+kotlinx-dataframe = { module = "org.jetbrains.kotlinx:dataframe", version.ref = "kotlinx-dataframe" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+
+[bundles]
+kotlinresult = ["kotlinresult", "kotlinresult-coroutines"]
+testing = ["junit-jupiter", "mockk"]
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version = "2.0.0" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version = "2.0.0" }
