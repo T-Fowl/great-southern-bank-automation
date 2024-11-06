@@ -12,7 +12,7 @@ group = "com.tfowl.gsb"
 version = "1.0-SNAPSHOT"
 
 application {
-    mainClass.set("com.tfowl.gsb.GreatSouthernBankKt")
+    mainClass.set("com.tfowl.gsb.cli.GsbKt")
 
     findProperty("playwright.nodejs.path")?.let { path ->
         applicationDefaultJvmArgs = listOf("-Dplaywright.nodejs.path=$path")
