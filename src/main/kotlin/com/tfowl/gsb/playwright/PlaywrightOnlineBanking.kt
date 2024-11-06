@@ -10,6 +10,7 @@ import com.tfowl.gsb.GSBError
 import com.tfowl.gsb.GSBMember
 import com.tfowl.gsb.GreatSouthernBank
 import com.tfowl.gsb.model.*
+import com.tfowl.gsb.playwright.BrowserController
 import com.tfowl.gsb.util.takeIfIsNotBlank
 import org.jetbrains.kotlinx.dataframe.api.*
 import org.jsoup.Jsoup
@@ -222,12 +223,10 @@ internal class GSBOnlineBankingMember(private val page: Page) : GSBMember {
     ): Result<List<ScheduledPayment>, GSBError> = Err(GSBError.UnsupportedOperation("Not Implemented Yet")) // TODO
 }
 
-class GSBPlaywrightOnlineBanking(browserConfig: BrowserType.LaunchOptions.() -> Unit = {}) :
-    GreatSouthernBank, AutoCloseable {
-    private val playwright = Playwright.create()
-    private val browser = playwright.chromium().launch(
-        BrowserType.LaunchOptions().apply(browserConfig)
-    )
+class GSBPlaywrightOnlineBanking(private val connector: BrowserController) : GreatSouthernBank, AutoCloseable {
+
+    private val browser = connector.connect()
+
     private val context = browser.newContext(
         Browser.NewContextOptions().setAcceptDownloads(true)
     )
@@ -260,6 +259,6 @@ class GSBPlaywrightOnlineBanking(browserConfig: BrowserType.LaunchOptions.() -> 
     }
 
     override fun close() {
-        playwright.close()
+        connector.close()
     }
 }
